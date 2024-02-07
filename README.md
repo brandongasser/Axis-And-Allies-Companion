@@ -1,1 +1,1 @@
-# Axis-And-Allies-Companion
+# Axis & Allies Companion
