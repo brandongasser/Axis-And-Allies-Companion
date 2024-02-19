@@ -76,6 +76,24 @@ class EconomyViewModel(private val appRepository: AppRepository) : ViewModel() {
         return true
     }
 
+    suspend fun steal(from: Nation, to: Nation) {
+        appRepository.steal(from = from, to = to)
+        val currentEconomies = economyUIState.value.economies
+        val newEconomies = mutableMapOf<Nation, Int>()
+        Nation.values().forEach {
+            if (it != from && it != to) {
+                newEconomies[it] = currentEconomies[it]!!
+            }
+            if (it == from) {
+                newEconomies[it] = 0
+            }
+            if (it == to) {
+                newEconomies[it] = currentEconomies[it]!! + currentEconomies[from]!!
+            }
+        }
+        updateEconomyUIState(economyUIState.value.copy(economies = newEconomies))
+    }
+
     suspend fun resetEconomies() {
         appRepository.resetEconomies()
         updateEconomyUIState(economyUIState.value.copy(economies=mapOf(

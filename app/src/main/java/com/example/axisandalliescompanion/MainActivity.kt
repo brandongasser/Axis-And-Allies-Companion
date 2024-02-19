@@ -83,6 +83,8 @@ fun Layout(modifier: Modifier = Modifier) {
         composable("all-economies") { AllEconomies(navController = navController) }
         composable("edit/{nationId}") { EditEconomy(navController = navController, nation = Nation.values()[it.arguments!!.getString("nationId")!!.toInt()]) }
         composable("purchase/{nationId}") { Purchase(navController = navController, nation = Nation.values()[it.arguments!!.getString("nationId")!!.toInt()]) }
+        composable("collect-income/{nationId}") { CollectIncome(navController = navController, nation = Nation.values()[it.arguments!!.getString("nationId")!!.toInt()]) }
+        composable("steal/{nationId}") { Steal(navController = navController, nation = Nation.values()[it.arguments!!.getString("nationId")!!.toInt()]) }
     }
 }
 
@@ -132,8 +134,16 @@ fun EditEconomy(modifier: Modifier = Modifier, navController: NavController, nat
         })
 
         Row {
+            Button(onClick = { navController.navigate("collect-income/${nation.ordinal}") }) {
+                Text(text = "Collect Income")
+            }
+
             Button(onClick = { navController.navigate("purchase/${nation.ordinal}") }) {
                 Text(text = "Purchase Units")
+            }
+
+            Button(onClick = { navController.navigate("steal/${nation.ordinal}") }) {
+                Text(text = "Steal")
             }
         }
 
@@ -222,6 +232,101 @@ fun UnitPurchase(modifier: Modifier = Modifier, purchaseType: PurchaseType, nati
 
         Button(onClick = { runBlocking { if (purchaseViewModel.removeUnit(purchaseType)) economyViewModel.addToEconomy(nation, purchaseType.cost) } }) {
             Text(text = "-")
+        }
+    }
+}
+
+@Composable
+fun CollectIncome(modifier: Modifier = Modifier, navController: NavController, nation: Nation) {
+    val economyViewModel: EconomyViewModel = viewModel(factory = EconomyViewModel.Factory)
+
+    val collectIncomeViewModel: CollectIncomeViewModel = viewModel(factory = CollectIncomeViewModel.Factory)
+    val collectIncomeUIState = collectIncomeViewModel.collectIncomeUIState.collectAsState()
+
+    Column {
+        Text(text = "$nation")
+
+        TextField(
+            label = { Text(text = "Base Income") },
+            value = TextFieldValue(
+                text = collectIncomeUIState.value.baseIncome.toString(),
+                selection = TextRange(collectIncomeUIState.value.baseIncome.toString().length)
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            onValueChange = {
+                collectIncomeViewModel.setBaseIncome(it.text.filter { it.isDigit() }.ifEmpty { "0" }.toInt())
+            }
+        )
+
+        TextField(
+            label = { Text(text = "Convoy Disruptions") },
+            value = TextFieldValue(
+                text = collectIncomeUIState.value.convoyDisruptions.toString(),
+                selection = TextRange(collectIncomeUIState.value.convoyDisruptions.toString().length)
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            onValueChange = {
+                collectIncomeViewModel.setConvoyDisruptions(it.text.filter { it.isDigit() }.ifEmpty { "0" }.toInt())
+            }
+        )
+
+        TextField(
+            label = { Text(text = "War Bonds") },
+            value = TextFieldValue(
+                text = collectIncomeUIState.value.warBonds.toString(),
+                selection = TextRange(collectIncomeUIState.value.warBonds.toString().length)
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            onValueChange = {
+                collectIncomeViewModel.setWarBonds(it.text.filter { it.isDigit() }.ifEmpty { "0" }.toInt())
+            }
+        )
+
+        TextField(
+            label = { Text(text = "National Objectives") },
+            value = TextFieldValue(
+                text = collectIncomeUIState.value.nationalObjectives.toString(),
+                selection = TextRange(collectIncomeUIState.value.nationalObjectives.toString().length)
+            ),
+            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number, imeAction = ImeAction.Done),
+            onValueChange = {
+                collectIncomeViewModel.setNationalObjectives(it.text.filter { it.isDigit() }.ifEmpty { "0" }.toInt())
+            }
+        )
+
+        Row {
+            Button(onClick = {
+                runBlocking {
+                    economyViewModel.addToEconomy(nation, collectIncomeUIState.value.baseIncome + collectIncomeUIState.value.warBonds + collectIncomeUIState.value.nationalObjectives - collectIncomeUIState.value.convoyDisruptions)
+                }
+                navController.navigate("all-economies")
+            }) {
+                Text(text = "Confirm")
+            }
+
+            Button(onClick = { navController.navigate("all-economies") }) {
+                Text(text = "Return")
+            }
+        }
+    }
+}
+
+@Composable
+fun Steal(modifier: Modifier = Modifier, navController: NavController, nation: Nation) {
+    val economyViewModel: EconomyViewModel = viewModel(factory = EconomyViewModel.Factory)
+
+    Column {
+        Nation.values().filter { it != nation }.forEach {
+            Button(onClick = { runBlocking {
+                economyViewModel.steal(from = it, to = nation)
+                navController.navigate("all-economies")
+            } }) {
+                Text(text = "$it")
+            }
+        }
+
+        Button(onClick = { navController.navigate("all-economies") }) {
+            Text(text = "Return")
         }
     }
 }

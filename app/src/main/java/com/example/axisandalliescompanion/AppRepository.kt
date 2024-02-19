@@ -43,6 +43,12 @@ class AppRepository(private val appDataSource: AppDataSource) {
         appDataSource.setEconomy(ipcs, nation.ordinal)
     }
 
+    suspend fun steal(from: Nation, to: Nation) {
+        val amount: Int = getEconomyEntryByNation(from).ipcs
+        appDataSource.addToEconomy(amount, to.ordinal)
+        appDataSource.removeFromEconomy(amount, from.ordinal)
+    }
+
     suspend fun initializeEconomies() {
         if (appDataSource.getEconomyEntryByNationId(Nation.GERMANY.ordinal).isEmpty()) {
             resetEconomies()
