@@ -89,7 +89,6 @@ fun Layout(modifier: Modifier = Modifier) {
 @Composable
 fun AllEconomies(modifier: Modifier = Modifier, navController: NavController) {
     val economyViewModel: EconomyViewModel = viewModel(factory = EconomyViewModel.Factory)
-    val economyUIState = economyViewModel.economyUIState.collectAsState()
 
     Column {
         Nation.values().forEach {
