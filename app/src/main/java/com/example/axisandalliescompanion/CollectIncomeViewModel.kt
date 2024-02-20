@@ -59,6 +59,7 @@ class CollectIncomeViewModel(private val appRepository: AppRepository) : ViewMod
             warBonds = collectIncomeUIState.value.warBonds,
             nationalObjectives = newValue
         )
+        updateCollectIncomeUIState(newState)
     }
 
     private fun updateCollectIncomeUIState(newState: CollectIncomeUIState) {
